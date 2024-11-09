@@ -28,3 +28,26 @@ jobs:
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v2
+
+  # Step 2: SCA (Software Composition Analysis) with OWASP Dependency-Check
+  sca:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download and Run Dependency-Check
+        run: |
+          # Download the stable version of OWASP Dependency-Check
+          curl -LO https://github.com/jeremylong/DependencyCheck/releases/download/v7.0.4/dependency-check-7.0.4-release.zip
+          # Unzip Dependency-Check package
+          unzip dependency-check-7.0.4-release.zip -d dependency-check
+          # Run Dependency-Check to scan dependencies and output an HTML report
+          dependency-check/bin/dependency-check.sh --scan . --format HTML --out dependency-check-report.html
+
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: dependency-check-report.html
