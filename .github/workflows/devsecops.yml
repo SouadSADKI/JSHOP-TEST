@@ -32,17 +32,19 @@ jobs:
   # Step 2: SCA (Software Composition Analysis) with OWASP Dependency-Check
   sca:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Download Dependency-Check
+      - name: Download and Install Dependency-Check
         run: |
-          # Download Dependency-Check (latest stable version: 7.4.0 as of 2024)
-          curl -LO https://github.com/jeremylong/DependencyCheck/releases/download/v7.4.0/dependency-check-7.4.0-release.zip
-          # Create a directory and extract Dependency-Check into it
+          # Download the Dependency-Check zip
+          curl -LO https://github.com/jeremylong/DependencyCheck/releases/download/v7.0.4/dependency-check-7.0.4-release.zip
+          # Unzip Dependency-Check package to ensure it is extracted to the correct path
           mkdir dependency-check
-          unzip dependency-check-7.4.0-release.zip -d dependency-check
+          unzip dependency-check-7.0.4-release.zip -d dependency-check
+          chmod +x dependency-check/bin/dependency-check.sh
 
       - name: Run Dependency-Check
         run: |
