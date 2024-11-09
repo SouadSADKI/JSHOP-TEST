@@ -1,0 +1,30 @@
+name: DevSecOps Pipeline for OWASP Juice Shop
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  # Step 1: SAST (Static Application Security Testing) with CodeQL
+  sast:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
