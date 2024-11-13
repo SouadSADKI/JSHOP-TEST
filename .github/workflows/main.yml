@@ -3,7 +3,7 @@ name: Juice Shop CI/CD with DevSecOps
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
       - main
