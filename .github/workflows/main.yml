@@ -85,29 +85,29 @@ jobs:
 
   # Container Image Security Scanning
   container-image-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Pull Juice Shop image from Docker Hub
-        run: docker pull bkimminich/juice-shop:latest
+  runs-on: ubuntu-latest
+  steps:
+    - name: Pull Juice Shop image from Docker Hub
+      run: docker pull bkimminich/juice-shop:latest
 
-      - name: Run Trivy Scan on Docker Image
-        uses: aquasecurity/trivy-action@v0.7.0
-        with:
-          image-ref: 'bkimminich/juice-shop:latest'
-          format: 'json'
-          output: 'trivy-report.json'
+    - name: Run Trivy Scan on Docker Image
+      uses: aquasecurity/trivy-action@main  # Use "main" to always get the latest
+      with:
+        image-ref: 'bkimminich/juice-shop:latest'
+        format: 'json'
+        output: 'trivy-report.json'
 
-      - name: Upload Trivy Scan Report to DefectDojo
-        env:
-          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
-          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
-        run: |
-          curl -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
-          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-          -H "accept: application/json" \
-          -F "scan_type=Container Scan" \
-          -F "file=@trivy-report.json" \
-          -F "engagement=1"  # Replace with your actual engagement ID
+    - name: Upload Trivy Scan Report to DefectDojo
+      env:
+        DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+        DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
+      run: |
+        curl -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
+        -H "Authorization: Token $DEFECTDOJO_API_KEY" \
+        -H "accept: application/json" \
+        -F "scan_type=Container Scan" \
+        -F "file=@trivy-report.json" \
+        -F "engagement=1"  # Replace with your actual engagement ID
 
   # DAST Scan with OWASP ZAP
   dast-scan:
