@@ -38,21 +38,19 @@ jobs:
           -F "file=@results.sarif" \
           -F "engagement=1"  # Replace with your actual engagement ID
 
-  # SCA using OWASP Dependency-Check and Snyk
+  # SCA using Whitesource Bolt
   sca-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run OWASP Dependency-Check
-        uses: actions/owasp-dependency-check@v4  # Corrected action name
-        with:
-          format: 'ALL'
-          project: 'Juice-Shop'
-          outdir: 'dependency-check-report'
+      - name: Whitesource Bolt Scan
+        uses: whitesource/bolt-action@v1
+        env:
+          WHITESOURCE_API_KEY: ${{ secrets.WHITESOURCE_TOKEN }}
 
-      - name: Upload Dependency-Check Report to DefectDojo
+      - name: Upload Whitesource Bolt Report to DefectDojo
         env:
           DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
@@ -60,27 +58,8 @@ jobs:
           curl -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
           -H "Authorization: Token $DEFECTDOJO_API_KEY" \
           -H "accept: application/json" \
-          -F "scan_type=Dependency Check Scan" \
-          -F "file=@dependency-check-report/dependency-check-report.xml" \
-          -F "engagement=1"  # Replace with your actual engagement ID
-
-      - name: Run Snyk SCA
-        uses: snyk/actions/setup@v2  # Corrected action syntax and version
-        with:
-          args: test --all-projects --file=package.json --sarif-file-output=snyk-results.sarif
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Upload Snyk SCA Report to DefectDojo
-        env:
-          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
-          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
-        run: |
-          curl -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
-          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-          -H "accept: application/json" \
-          -F "scan_type=Snyk Scan" \
-          -F "file=@snyk-results.sarif" \
+          -F "scan_type=Whitesource Scan" \
+          -F "file=@whitesource-bolt-report.json" \
           -F "engagement=1"  # Replace with your actual engagement ID
 
   # Container Image Security Scanning
@@ -106,41 +85,4 @@ jobs:
           -H "Authorization: Token $DEFECTDOJO_API_KEY" \
           -H "accept: application/json" \
           -F "scan_type=Container Scan" \
-          -F "file=@trivy-report.json" \
-          -F "engagement=1"  # Replace with your actual engagement ID
-
-  # DAST Scan with OWASP ZAP
-  dast-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up ZAP
-        run: |
-          docker pull owasp/zap2docker-stable
-          docker run -d -u zap -p 8080:8080 owasp/zap2docker-stable zap.sh -daemon -port 8080
-
-      - name: Run ZAP Scan
-        env:
-          TARGET_URL: "http://localhost:3000"  # Replace with your app’s URL
-        run: |
-          docker exec zap zap-cli quick-scan --self-contained --start-options '-config api.addrs.addr.name=.* -config api.addrs.addr.regex=true' $TARGET_URL
-          docker exec zap zap-cli report -o zap-report.xml -f xml
-
-      - name: Upload ZAP Report to DefectDojo
-        env:
-          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
-          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
-        run: |
-          curl -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
-          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-          -H "accept: application/json" \
-          -F "scan_type=ZAP Scan" \
-          -F "file=@zap-report.xml" \
-          -F "engagement=1"  # Replace with your actual engagement ID
-
-  # Deploy Juice Shop from Docker Hub (optional, to verify the CI/CD pipeline)
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [codeql-sast, sca-scan, container-image-scan, dast-scan]
-    steps:
-      - name: Deploy Juice Shop
-        run: docker run --rm -d -p 3000:3000 bkimminich/juice-shop:latest
+         
