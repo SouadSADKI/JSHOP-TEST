@@ -1,4 +1,4 @@
-name: CodeQL SAST with DefectDojo
+name: CodeQL SAST
 
 on:
   push:
@@ -24,26 +24,6 @@ jobs:
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v2
-
-      - name: Upload CodeQL Report to DefectDojo
-        env:
-          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
-          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
-          ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
-        run: |
-          if [ -f "results.sarif" ]; then
-            curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
-              -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-              -H "accept: application/json" \
-              -F "scan_type=CodeQL" \
-              -F "file=@results.sarif" \
-              -F "engagement=$ENGAGEMENT_ID" \
-              -F "auto_create_context=true" \
-              -F "active=true" \
-              -F "verified=false"
-          else
-            echo "CodeQL SARIF report not found."
-          fi
 
       - name: Upload CodeQL SARIF Report as Artifact
         if: always() # Ensure artifact is uploaded even if previous steps fail
