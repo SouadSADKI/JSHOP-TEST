@@ -3,7 +3,7 @@ name: Security Scans (SCA, SAST, DAST)
 on:
   push:
     branches:
-      - main  # Replace with your branch
+      - master
   pull_request:
     branches:
       - main  # Replace with your branch
