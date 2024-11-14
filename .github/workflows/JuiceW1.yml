@@ -43,6 +43,7 @@ jobs:
               -F "verified=false"
           else
             echo "CodeQL SARIF report not found."
+          fi
 
       - name: Upload CodeQL SARIF Report as Artifact
         if: always() # Ensure artifact is uploaded even if previous steps fail
