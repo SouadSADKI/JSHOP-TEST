@@ -24,13 +24,13 @@ jobs:
       # Step 3: Authenticate with Snyk using the API token stored in GitHub secrets
       - name: Authenticate with Snyk
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Make sure you have added your SNYK_TOKEN in GitHub secrets
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Ensure your SNYK_TOKEN is stored in GitHub secrets
         run: snyk auth $SNYK_TOKEN
 
-      # Step 4: Run Snyk SCA test for the "JSHOP-TEST" project (based on the package.json)
-      - name: Run Snyk SCA test for JSHOP-TEST
-        run: snyk test --all-projects  # This will scan all projects within the repo (e.g., package.json, etc.)
+      # Step 4: Run Snyk SCA test specifically on package.json
+      - name: Run Snyk SCA test for package.json
+        run: snyk test --file=package.json  # Specify the exact file to scan
 
-      # Optional Step 5: Monitor the JSHOP-TEST project in Snyk for future vulnerability tracking
+      # Optional Step 5: Monitor the JSHOP-TEST project with Snyk
       - name: Monitor JSHOP-TEST with Snyk
-        run: snyk monitor --all-projects
+        run: snyk monitor --file=package.json
