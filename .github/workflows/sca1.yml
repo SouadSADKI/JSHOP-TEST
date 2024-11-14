@@ -1,12 +1,12 @@
-name: SCA Scan for JSHO
+name: SCA Scan for JSHOP-TEST
 
 on:
   push:
     branches:
-      - master
+      - master  # Trigger when pushing to the master branch, or change to your main branch
   pull_request:
     branches:
-      - main  # Same as above, for PRs to the 'main' branch
+      - master  # Trigger for pull requests targeting master branch
 
 jobs:
   snyk-sca-scan:
@@ -24,13 +24,13 @@ jobs:
       # Step 3: Authenticate with Snyk using the API token stored in GitHub secrets
       - name: Authenticate with Snyk
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Make sure you have added your SNYK_TOKEN in GitHub secrets
         run: snyk auth $SNYK_TOKEN
 
-      # Step 4: Run Snyk SCA test specifically for the JSHO project
-      - name: Run Snyk SCA test for JSHO
-        run: snyk test --project-name=JSHO
+      # Step 4: Run Snyk SCA test for the "JSHOP-TEST" project (based on the package.json)
+      - name: Run Snyk SCA test for JSHOP-TEST
+        run: snyk test --all-projects  # This will scan all projects within the repo (e.g., package.json, etc.)
 
-      # Optional Step 5: Monitor the JSHO project in Snyk (if you want to track issues over time)
-      - name: Monitor with Snyk
-        run: snyk monitor --project-name=JSHOP-TEST
+      # Optional Step 5: Monitor the JSHOP-TEST project in Snyk for future vulnerability tracking
+      - name: Monitor JSHOP-TEST with Snyk
+        run: snyk monitor --all-projects
