@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  # SAST using CodeQL
+  # SAST using CodeQL 2
   codeql-sast:
     runs-on: ubuntu-latest
     permissions:
