@@ -62,23 +62,23 @@ jobs:
           | tr -d \" \
           | wget -i -
 
-          # Extract the main Dependency-Check release zip file
-          unzip "dependency-check-*-release.zip" -d dependency-check || echo "No matching zip file found"
-          sudo ln -s $(pwd)/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
+          # Extract the Dependency-Check release zip file
+          unzip "dependency-check-*-release.zip" -d dependency-check
 
       - name: Run OWASP Dependency-Check
         run: |
-          dependency-check --project "Juice-Shop" \
-                           --out dependency-check-report \
-                           --scan $(pwd) \
-                           --format "ALL"
+          # Run dependency-check.sh directly from its installation path
+          ./dependency-check/bin/dependency-check.sh --project "Juice-Shop" \
+                                                     --out dependency-check-report \
+                                                     --scan $(pwd) \
+                                                     --format "ALL"
 
       - name: Upload Dependency-Check Report as Artifact
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: Dependency-Check-Report
-          path: dependency-check-report/
+          path: dependency-check-report/      # Upload all report files from the output directory
 
       - name: Upload Dependency-Check Report to DefectDojo
         env:
