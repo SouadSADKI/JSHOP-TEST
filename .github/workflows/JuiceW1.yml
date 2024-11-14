@@ -33,8 +33,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Dependency-Check
-        uses: dependency-check/action@v4.2.0  # Stable version of Dependency-Check Action
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/dependency-check-action@v3.3.0  # Corrected action with stable version
         with:
           format: 'ALL'                       # Output reports in all formats
           project: 'Juice-Shop'               # Name of the project for the report
