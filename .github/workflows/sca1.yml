@@ -33,4 +33,4 @@ jobs:
 
       # Optional Step 5: Monitor the project in Snyk (if you want to track issues over time)
       - name: Monitor with Snyk
-        run: snyk monitor --all-projects
+        run: snyk monitor JSHOP-TEST
