@@ -1,0 +1,36 @@
+name: SCA Scan for Juice Shop
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  snyk-sca-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Install Snyk CLI
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      # Step 3: Authenticate with Snyk using the API token stored in GitHub secrets
+      - name: Authenticate with Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth $SNYK_TOKEN
+
+      # Step 4: Run Snyk test for Software Composition Analysis (SCA)
+      - name: Run Snyk SCA test
+        run: snyk test --all-projects
+
+      # Optional Step 5: Monitor the project in Snyk (if you want to track issues over time)
+      - name: Monitor with Snyk
+        run: snyk monitor --all-projects
