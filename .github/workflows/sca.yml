@@ -11,7 +11,6 @@ permissions:
   actions: write
 
 jobs:
-  # Job for Software Composition Analysis (SCA) using OWASP Dependency-Check
   sca-analysis:
     runs-on: ubuntu-latest
 
@@ -22,19 +21,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Utilisez la version recommandée pour Juice Shop
+          node-version: '16'
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Install OWASP Dependency-Check
+      - name: Download OWASP Dependency-Check
         run: |
           wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.5.0/dependency-check-6.5.0-release.zip
-          unzip dependency-check-6.5.0-release.zip -d dependency-check
+          unzip dependency-check-6.5.0-release.zip -d dependency-check || exit 1
+
+      - name: Verify Installation
+        run: ls -al dependency-check/bin
 
       - name: Run OWASP Dependency-Check
         run: |
-          dependency-check/bin/dependency-check.sh \
+          ./dependency-check/bin/dependency-check.sh \
           --project "Juice Shop SCA" \
           --scan . \
           --format "ALL" \
