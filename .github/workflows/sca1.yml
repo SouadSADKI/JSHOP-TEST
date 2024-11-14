@@ -1,12 +1,12 @@
-name: SCA Scan for Juice Shop
+name: SCA Scan for JSHO
 
 on:
   push:
     branches:
-      - master
+      - main  # Change this to the branch you want to trigger the scan on (e.g., 'master', 'dev')
   pull_request:
     branches:
-      - master
+      - main  # Same as above, for PRs to the 'main' branch
 
 jobs:
   snyk-sca-scan:
@@ -27,10 +27,10 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk auth $SNYK_TOKEN
 
-      # Step 4: Run Snyk test for Software Composition Analysis (SCA)
-      - name: Run Snyk SCA test
-        run: snyk test --all-projects
+      # Step 4: Run Snyk SCA test specifically for the JSHO project
+      - name: Run Snyk SCA test for JSHO
+        run: snyk test --project-name=JSHO
 
-      # Optional Step 5: Monitor the project in Snyk (if you want to track issues over time)
+      # Optional Step 5: Monitor the JSHO project in Snyk (if you want to track issues over time)
       - name: Monitor with Snyk
-        run: snyk monitor JSHOP-TEST
+        run: snyk monitor --project-name=JSHO
