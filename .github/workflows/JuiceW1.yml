@@ -43,4 +43,37 @@ jobs:
               -F "verified=false"
           else
             echo "CodeQL SARIF report not found."
-          fi
+
+  # OWASP Dependency-Check SCA job for dependency analysis
+  owasp-dependency-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/github-action@v3
+        with:
+          format: "XML"
+          output_directory: "./dependency-check-report"
+
+      - name: Upload OWASP Dependency-Check Report to DefectDojo
+        env:
+          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
+          ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
+        run: |
+          REPORT_FILE="./dependency-check-report/dependency-check-report.xml"
+          if [ -f "$REPORT_FILE" ]; then
+            curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
+              -H "Authorization: Token $DEFECTDOJO_API_KEY" \
+              -H "accept: application/json" \
+              -F "scan_type=Dependency Check" \
+              -F "file=@$REPORT_FILE" \
+              -F "engagement=$ENGAGEMENT_ID" \
+              -F "auto_create_context=true" \
+              -F "active=true" \
+              -F "verified=false"
+          else
+            echo "OWASP Dependency-Check report not found."
