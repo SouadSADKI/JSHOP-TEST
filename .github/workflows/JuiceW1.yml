@@ -1,6 +1,5 @@
-name: CodeQL SAST Analysis
+name: CodeQL SAST and OWASP Dependency-Check SCA
 
-# Trigger the workflow on pushes to the main or master branch, or on pull requests.
 on:
   push:
     branches: [ main, master ]
@@ -8,20 +7,42 @@ on:
     branches: [ main, master ]
 
 jobs:
+  # CodeQL SAST job for static code analysis
   codeql-sast:
     runs-on: ubuntu-latest
     permissions:
-      security-events: write  # Required for CodeQL to upload results to GitHub's security tab
+      security-events: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Checks out the code from your repo
+        uses: actions/checkout@v3
 
       - name: Set up CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: 'javascript'  # OWASP Juice Shop is primarily JavaScript-based
+          languages: 'javascript'
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v2
 
+  # OWASP Dependency-Check SCA job for dependency analysis
+  dependency-check-sca:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Dependency-Check
+        uses: dependency-check/action@v4.2.0  # Stable version of Dependency-Check Action
+        with:
+          format: 'ALL'                       # Output reports in all formats
+          project: 'Juice-Shop'               # Name of the project for the report
+          outdir: 'dependency-check-report'   # Directory for storing report outputs
+
+      - name: Upload Dependency-Check Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Dependency-Check-Report
+          path: dependency-check-report/      # Upload all report files from the output directory
