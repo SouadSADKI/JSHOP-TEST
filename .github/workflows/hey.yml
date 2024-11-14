@@ -29,14 +29,21 @@ jobs:
           echo "Juice Shop is ready!"
 
       # Step 2: Set up OWASP ZAP and run DAST against the Juice Shop app
-      - name: Set up ZAP
+      - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           target: 'http://localhost:3000'
+          format: 'html,json,md'  # Generate HTML, JSON, and Markdown reports
+          report: 'zap_report.html'
+          json_report: 'zap_report.json'
+          md_report: 'zap_report.md'
 
-      # Step 3: Upload ZAP report as artifact
-      - name: Upload ZAP Report as Artifact
+      # Step 3: Upload ZAP reports as artifacts for download
+      - name: Upload ZAP Reports as Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: zap-report
-          path: /zap/wrk/*/zap-report.html
+          name: zap-reports
+          path: |
+            zap_report.html
+            zap_report.json
+            zap_report.md
