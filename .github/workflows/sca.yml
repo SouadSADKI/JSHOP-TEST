@@ -1,51 +1,33 @@
-name: CI Pipeline for OWASP Juice Shop - SCA with Snyk
+name: SCA Scan with Snyk
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
   pull_request:
-    branches: [ main, master ]
-
-permissions:
-  contents: write
-  actions: write
 
 jobs:
-  sca-analysis:
+  snyk-sca-scan:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
+      # Install Snyk
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Authenticate Snyk
+      # Authenticate Snyk CLI
+      - name: Authenticate Snyk CLI
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          npm install -g snyk
-          snyk auth "${SNYK_TOKEN}"
+        run: snyk auth $SNYK_TOKEN
 
-      - name: Run Snyk SCA Analysis
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          snyk test --all-projects --severity-threshold=low
+      # Run Snyk test to check for vulnerabilities
+      - name: Run Snyk Dependency Scan
+        run: snyk test --all-projects
 
-      - name: Generate Snyk HTML Report
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk test --all-projects --severity-threshold=low --json | snyk-to-html -o snyk_report.html
-
-      - name: Upload SCA Report as Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: snyk-sca-report
-          path: snyk_report.html
+      # Optional: Monitor project in Snyk (keeps it up to date in Snyk dashboard)
+      - name: Monitor Project on Snyk
+        run: snyk monitor --all-projects
