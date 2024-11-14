@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  # DAST job for running OWASP ZAP against the Juice Shop app
+  # DAST job for running OWASP ZAP against the Juice Shop appp
   zap-dast:
     runs-on: ubuntu-latest
 
