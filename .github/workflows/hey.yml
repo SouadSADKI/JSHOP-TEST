@@ -6,19 +6,20 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: write
+  actions: write
+
 jobs:
-  # DAST job for running OWASP ZAP against the Juice Shop app
   zap-dast:
     runs-on: ubuntu-latest
 
     services:
-      # Start the Juice Shop application in a Docker container
       juice-shop:
         image: bkimminich/juice-shop:latest
         options: --publish 3000:3000
 
     steps:
-      # Step 1: Wait for Juice Shop to be ready
       - name: Wait for Juice Shop to be ready
         run: |
           echo "Waiting for Juice Shop to be available..."
@@ -28,17 +29,15 @@ jobs:
           done
           echo "Juice Shop is ready!"
 
-      # Step 2: Set up OWASP ZAP and run DAST against the Juice Shop app
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.8.0
         with:
           target: 'http://localhost:3000'
-          format: 'html,json,md'  # Generate HTML, JSON, and Markdown reports
+          format: 'html,json,md'
           report: 'zap_report.html'
           json_report: 'zap_report.json'
           md_report: 'zap_report.md'
 
-      # Step 3: Upload ZAP reports as artifacts for download
       - name: Upload ZAP Reports as Artifacts
         uses: actions/upload-artifact@v3
         with:
