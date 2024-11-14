@@ -1,4 +1,4 @@
-name: CI Pipeline for OWASP Juice Shop - SCA
+name: CI Pipeline for OWASP Juice Shop - SCA with Snyk
 
 on:
   push:
@@ -26,24 +26,26 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Download OWASP Dependency-Check
+      - name: Authenticate Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.5.0/dependency-check-6.5.0-release.zip
-          unzip dependency-check-6.5.0-release.zip -d dependency-check || exit 1
+          npm install -g snyk
+          snyk auth "${SNYK_TOKEN}"
 
-      - name: Verify Installation
-        run: ls -al dependency-check/bin
-
-      - name: Run OWASP Dependency-Check
+      - name: Run Snyk SCA Analysis
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          ./dependency-check/bin/dependency-check.sh \
-          --project "Juice Shop SCA" \
-          --scan . \
-          --format "ALL" \
-          --out reports/
+          snyk test --all-projects --severity-threshold=low
 
-      - name: Upload SCA Reports as Artifacts
+      - name: Generate Snyk HTML Report
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --all-projects --severity-threshold=low --json | snyk-to-html -o snyk_report.html
+
+      - name: Upload SCA Report as Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: sca-reports
-          path: reports/
+          name: snyk-sca-report
+          path: snyk_report.html
