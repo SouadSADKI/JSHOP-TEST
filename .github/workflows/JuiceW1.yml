@@ -31,16 +31,20 @@ jobs:
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
           ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
         run: |
-          # Upload CodeQL SARIF report to DefectDojo
-          curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
-          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-          -H "accept: application/json" \
-          -F "scan_type=CodeQL" \
-          -F "file=@results.sarif" \
-          -F "engagement=$ENGAGEMENT_ID" \
-          -F "auto_create_context=true" \
-          -F "active=true" \
-          -F "verified=false"
+          # Check if the SARIF report exists and upload it to DefectDojo
+          if [ -f "results.sarif" ]; then
+            curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
+              -H "Authorization: Token $DEFECTDOJO_API_KEY" \
+              -H "accept: application/json" \
+              -F "scan_type=CodeQL" \
+              -F "file=@results.sarif" \
+              -F "engagement=$ENGAGEMENT_ID" \
+              -F "auto_create_context=true" \
+              -F "active=true" \
+              -F "verified=false"
+          else
+            echo "CodeQL SARIF report not found."
+          fi
 
   # OWASP Dependency-Check SCA job for dependency analysis
   dependency-check-sca:
@@ -70,25 +74,30 @@ jobs:
                            --scan $(pwd) \
                            --format "ALL"
 
+      - name: Upload Dependency-Check Report as Artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Dependency-Check-Report
+          path: dependency-check-report/      # Upload all report files from the output directory
+
       - name: Upload Dependency-Check Report to DefectDojo
         env:
           DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
           ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
         run: |
-          # Upload Dependency-Check XML report to DefectDojo
-          curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
-          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-          -H "accept: application/json" \
-          -F "scan_type=Dependency Check Scan" \
-          -F "file=@dependency-check-report/dependency-check-report.xml" \
-          -F "engagement=$ENGAGEMENT_ID" \
-          -F "auto_create_context=true" \
-          -F "active=true" \
-          -F "verified=false"
-
-      - name: Upload Dependency-Check Report as Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Dependency-Check-Report
-          path: dependency-check-report/      # Upload all report files from the output directory
+          # Check if the Dependency-Check XML report exists and upload it to DefectDojo
+          if [ -f "dependency-check-report/dependency-check-report.xml" ]; then
+            curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
+              -H "Authorization: Token $DEFECTDOJO_API_KEY" \
+              -H "accept: application/json" \
+              -F "scan_type=Dependency Check Scan" \
+              -F "file=@dependency-check-report/dependency-check-report.xml" \
+              -F "engagement=$ENGAGEMENT_ID" \
+              -F "auto_create_context=true" \
+              -F "active=true" \
+              -F "verified=false"
+          else
+            echo "Dependency-Check XML report not found."
+          fi
