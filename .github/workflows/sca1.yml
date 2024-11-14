@@ -3,7 +3,7 @@ name: Snyk SCA Scan for Juice Shop
 on:
   push:
     branches:
-      - main  # Or replace with your branch
+      - master
   pull_request:
     branches:
       - main  # Or replace with your branch
