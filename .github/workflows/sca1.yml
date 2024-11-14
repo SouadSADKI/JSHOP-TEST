@@ -1,36 +1,34 @@
-name: SCA Scan for JSHOP-TEST
+name: Snyk SCA Scan for Juice Shop
 
 on:
   push:
     branches:
-      - master  # Trigger when pushing to the master branch, or change to your main branch
+      - main  # Or replace with your branch
   pull_request:
     branches:
-      - master  # Trigger for pull requests targeting master branch
+      - main  # Or replace with your branch
 
 jobs:
-  snyk-sca-scan:
+  snyk-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Step 2: Install Snyk CLI
-      - name: Install Snyk CLI
-        run: npm install -g snyk
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'  # Or the version your project uses
 
-      # Step 3: Authenticate with Snyk using the API token stored in GitHub secrets
-      - name: Authenticate with Snyk
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Ensure your SNYK_TOKEN is stored in GitHub secrets
-        run: snyk auth $SNYK_TOKEN
+    - name: Install dependencies
+      run: npm install
 
-      # Step 4: Run Snyk SCA test specifically on package.json
-      - name: Run Snyk SCA test for package.json
-        run: snyk test --file=package.json  # Specify the exact file to scan
+    - name: Install Snyk
+      run: npm install -g snyk
 
-      # Optional Step 5: Monitor the JSHOP-TEST project with Snyk
-      - name: Monitor JSHOP-TEST with Snyk
-        run: snyk monitor --file=package.json
+    - name: Run Snyk SCA scan
+      run: snyk test --all-projects
+
+    - name: Monitor project with Snyk
+      run: snyk monitor --all-projects
