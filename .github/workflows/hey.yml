@@ -21,13 +21,14 @@ jobs:
           --health-interval 10s  # Check every 10 seconds
           --health-timeout 5s  # Timeout for the health check
           --health-retries 3  # Retry health check 3 times before failing
+          -e GITHUB_ACTIONS=true -e CI=true  # Set CI environment variables
 
     steps:
       # Step 1: Checkout the code (not strictly needed for just DAST)
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Wait for the Juice Shop container to be ready (this is essential before starting the ZAP scan)
+      # Step 2: Wait for Juice Shop to be ready
       - name: Wait for Juice Shop to be ready
         run: |
           # Wait for the Juice Shop app to be available before proceeding
