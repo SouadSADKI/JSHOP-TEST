@@ -1,4 +1,4 @@
-name: CodeQL SAST and OWASP Dependency-Check SCA
+name: CodeQL SAST and OWASP Dependency-Check SCA with DefectDojo
 
 on:
   push:
@@ -25,6 +25,23 @@ jobs:
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v2
 
+      - name: Upload CodeQL Report to DefectDojo
+        env:
+          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
+          ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
+        run: |
+          # Upload CodeQL SARIF report to DefectDojo
+          curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
+          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
+          -H "accept: application/json" \
+          -F "scan_type=CodeQL" \
+          -F "file=@results.sarif" \
+          -F "engagement=$ENGAGEMENT_ID" \
+          -F "auto_create_context=true" \
+          -F "active=true" \
+          -F "verified=false"
+
   # OWASP Dependency-Check SCA job for dependency analysis
   dependency-check-sca:
     runs-on: ubuntu-latest
@@ -36,4 +53,42 @@ jobs:
       - name: Install OWASP Dependency-Check
         run: |
           # Download the latest Dependency-Check release
-          curl -s https://api.github.com/repos/jeremylong/Dep
+          curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest \
+          | grep "browser_download_url.*release.zip" \
+          | cut -d : -f 2,3 \
+          | tr -d \" \
+          | wget -i -
+
+          # Extract Dependency-Check
+          unzip dependency-check-*-release.zip -d dependency-check
+          sudo ln -s $(pwd)/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
+
+      - name: Run OWASP Dependency-Check
+        run: |
+          dependency-check --project "Juice-Shop" \
+                           --out dependency-check-report \
+                           --scan $(pwd) \
+                           --format "ALL"
+
+      - name: Upload Dependency-Check Report to DefectDojo
+        env:
+          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
+          ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
+        run: |
+          # Upload Dependency-Check XML report to DefectDojo
+          curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
+          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
+          -H "accept: application/json" \
+          -F "scan_type=Dependency Check Scan" \
+          -F "file=@dependency-check-report/dependency-check-report.xml" \
+          -F "engagement=$ENGAGEMENT_ID" \
+          -F "auto_create_context=true" \
+          -F "active=true" \
+          -F "verified=false"
+
+      - name: Upload Dependency-Check Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Dependency-Check-Report
+          path: dependency-check-report/      # Upload all report files from the output directory
