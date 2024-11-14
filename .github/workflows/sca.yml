@@ -1,0 +1,47 @@
+name: CI Pipeline for OWASP Juice Shop - SCA
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  # Job for Software Composition Analysis (SCA) using OWASP Dependency-Check
+  sca-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Utilisez la version recommandée pour Juice Shop
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install OWASP Dependency-Check
+        run: |
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.5.0/dependency-check-6.5.0-release.zip
+          unzip dependency-check-6.5.0-release.zip -d dependency-check
+
+      - name: Run OWASP Dependency-Check
+        run: |
+          dependency-check/bin/dependency-check.sh \
+          --project "Juice Shop SCA" \
+          --scan . \
+          --format "ALL" \
+          --out reports/
+
+      - name: Upload SCA Reports as Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sca-reports
+          path: reports/
