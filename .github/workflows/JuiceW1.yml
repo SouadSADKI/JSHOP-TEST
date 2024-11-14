@@ -1,39 +1,27 @@
-name: Juice Shop CI/CD with DevSecOps
+name: CodeQL SAST Analysis
 
+# Trigger the workflow on pushes to the main or master branch, or on pull requests.
 on:
   push:
-    branches:
-      - master
+    branches: [ main, master ]
   pull_request:
-    branches:
-      - main
+    branches: [ main, master ]
 
 jobs:
-  # SAST using CodeQL
   codeql-sast:
     runs-on: ubuntu-latest
     permissions:
-      security-events: write
+      security-events: write  # Required for CodeQL to upload results to GitHub's security tab
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Checks out the code from your repo
 
-      - name: Initialize CodeQL
+      - name: Set up CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: 'javascript'
+          languages: 'javascript'  # OWASP Juice Shop is primarily JavaScript-based
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v2
 
-      - name: Upload SAST Report to DefectDojo
-        env:
-          DEFECTDOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
-          DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
-        run: |
-          curl -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
-          -H "Authorization: Token $DEFECTDOJO_API_KEY" \
-          -H "accept: application/json" \
-          -F "scan_type=CodeQL" \
-          -F "file=@results.sarif" \
-          -F "engagement=1"  # Replace with your actual engagement ID
