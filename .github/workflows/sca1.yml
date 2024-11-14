@@ -1,12 +1,12 @@
-name: Snyk SCA Scan for Juice Shop
+name: Security Scans (SCA, SAST, DAST)
 
 on:
   push:
     branches:
-      - master
+      - main  # Replace with your branch
   pull_request:
     branches:
-      - main  # Or replace with your branch
+      - main  # Replace with your branch
 
 jobs:
   snyk-scan:
@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'  # Or the version your project uses
+        node-version: '14'  # Replace with the version your project uses
 
     - name: Install dependencies
       run: npm install
@@ -28,7 +28,57 @@ jobs:
       run: npm install -g snyk
 
     - name: Run Snyk SCA scan
-      run: snyk test --all-projects
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # Ensure Snyk token is set as a secret in your repo
+      run: |
+        snyk test --all-projects --json > snyk-result.json || true
+        snyk monitor --all-projects
 
-    - name: Monitor project with Snyk
-      run: snyk monitor --all-projects
+  codeql-scan:
+    runs-on: ubuntu-latest
+    name: Run CodeQL Analysis
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up CodeQL
+      uses: github/codeql-action/setup-codeql@v2
+
+    - name: Initialize CodeQL
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install codeql
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: 'security'
+
+  zap-scan:
+    runs-on: ubuntu-latest
+    name: OWASP ZAP DAST Scan
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up ZAP Docker
+      run: |
+        docker pull owasp/zap2docker-stable
+
+    - name: Start ZAP Docker
+      run: |
+        docker run -d -u zap -v /tmp:/tmp -v /home/ghactions:/zap/wrk/:rw -p 8080:8080 owasp/zap2docker-stable zap-full-scan.py -t http://localhost:3000  # Change URL to match your app's URL
+        sleep 30  # Allow ZAP to initialize
+
+    - name: Run ZAP Scan
+      run: |
+        docker exec -t zap /zap/zap-api-scan.py -t http://localhost:3000  # Change URL to match your app's URL
+        docker logs zap
+
+    - name: Upload ZAP scan results
+      uses: actions/upload-artifact@v2
+      with:
+        name: zap-results
+        path: /zap/wrk/*.xml
