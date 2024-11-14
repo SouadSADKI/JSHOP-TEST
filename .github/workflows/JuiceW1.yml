@@ -31,7 +31,6 @@ jobs:
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
           ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
         run: |
-          # Check if the SARIF report exists and upload it to DefectDojo
           if [ -f "results.sarif" ]; then
             curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
               -H "Authorization: Token $DEFECTDOJO_API_KEY" \
@@ -63,8 +62,8 @@ jobs:
           | tr -d \" \
           | wget -i -
 
-          # Extract Dependency-Check
-          unzip dependency-check-*-release.zip -d dependency-check
+          # Extract the main Dependency-Check release zip file
+          unzip "dependency-check-*-release.zip" -d dependency-check || echo "No matching zip file found"
           sudo ln -s $(pwd)/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
 
       - name: Run OWASP Dependency-Check
@@ -79,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Dependency-Check-Report
-          path: dependency-check-report/      # Upload all report files from the output directory
+          path: dependency-check-report/
 
       - name: Upload Dependency-Check Report to DefectDojo
         env:
@@ -87,7 +86,6 @@ jobs:
           DEFECTDOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
           ENGAGEMENT_ID: ${{ secrets.ENGAGEMENT_ID }}
         run: |
-          # Check if the Dependency-Check XML report exists and upload it to DefectDojo
           if [ -f "dependency-check-report/dependency-check-report.xml" ]; then
             curl -X POST "$DEFECTDOJO_URL/api/v2/import-scan/" \
               -H "Authorization: Token $DEFECTDOJO_API_KEY" \
