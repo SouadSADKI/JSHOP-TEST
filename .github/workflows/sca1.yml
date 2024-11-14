@@ -3,7 +3,7 @@ name: SCA Scan for JSHO
 on:
   push:
     branches:
-      - main  # Change this to the branch you want to trigger the scan on (e.g., 'master', 'dev')
+      - master
   pull_request:
     branches:
       - main  # Same as above, for PRs to the 'main' branch
