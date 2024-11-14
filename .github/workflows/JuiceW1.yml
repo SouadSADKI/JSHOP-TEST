@@ -53,17 +53,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install OWASP Dependency-Check
+      - name: Download and Install OWASP Dependency-Check
         run: |
-          # Download the latest Dependency-Check release
-          curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest \
-          | grep "browser_download_url.*release.zip" \
-          | cut -d : -f 2,3 \
-          | tr -d \" \
-          | wget -i -
+          # Define the version to use for Dependency-Check
+          DEP_CHECK_VERSION="7.0.5"
+          
+          # Download Dependency-Check
+          echo "Downloading Dependency-Check version $DEP_CHECK_VERSION..."
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v$DEP_CHECK_VERSION/dependency-check-$DEP_CHECK_VERSION-release.zip
 
-          # Extract the Dependency-Check release zip file
-          unzip "dependency-check-*-release.zip" -d dependency-check
+          # Verify download
+          if [ -f "dependency-check-$DEP_CHECK_VERSION-release.zip" ]; then
+            echo "Dependency-Check downloaded successfully."
+          else
+            echo "Failed to download Dependency-Check."
+            exit 1
+          fi
+
+          # Extract Dependency-Check
+          unzip "dependency-check-$DEP_CHECK_VERSION-release.zip" -d dependency-check
+
+          # Verify extraction
+          if [ -f "./dependency-check/bin/dependency-check.sh" ]; then
+            echo "Dependency-Check installed successfully."
+          else
+            echo "Failed to extract Dependency-Check."
+            exit 1
+          fi
 
       - name: Run OWASP Dependency-Check
         run: |
