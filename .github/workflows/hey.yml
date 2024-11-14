@@ -1,0 +1,52 @@
+name: Deploy OWASP Juice Shop and Run OWASP ZAP DAST
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # DAST job for running OWASP ZAP against the Juice Shop app
+  zap-dast:
+    runs-on: ubuntu-latest
+
+    services:
+      # Start the Juice Shop application in a Docker container
+      juice-shop:
+        image: bkimminich/juice-shop:latest  # Official Juice Shop Docker image
+        options: >-
+          --publish 3000:3000  # Map port 3000 on the container to port 3000 on the host
+          --health-cmd "curl --silent --fail http://localhost:3000 || exit 1"  # Health check to ensure Juice Shop is up
+          --health-interval 10s  # Check every 10 seconds
+          --health-timeout 5s  # Timeout for the health check
+          --health-retries 3  # Retry health check 3 times before failing
+
+    steps:
+      # Step 1: Checkout the code (not strictly needed for just DAST)
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Wait for the Juice Shop container to be ready (this is essential before starting the ZAP scan)
+      - name: Wait for Juice Shop to be ready
+        run: |
+          # Wait for the Juice Shop app to be available before proceeding
+          echo "Waiting for Juice Shop to be available..."
+          while ! curl --silent --fail http://localhost:3000; do
+            echo "Waiting..."
+            sleep 5
+          done
+          echo "Juice Shop is ready!"
+
+      # Step 3: Set up OWASP ZAP and run DAST against the Juice Shop app
+      - name: Set up ZAP
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          target: 'http://localhost:3000'  # Target URL for Juice Shop
+
+      # Step 4: Upload ZAP report as artifact
+      - name: Upload ZAP Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: /zap/wrk/*/zap-report.html
