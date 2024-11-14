@@ -33,12 +33,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Install OWASP Dependency-Check
+        run: |
+          curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v7.0.5/dependency-check-7.0.5-release.zip
+          unzip dependency-check.zip -d dependency-check
+          sudo ln -s $(pwd)/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
+
       - name: Run OWASP Dependency-Check
-        uses: dependency-check/dependency-check-action@v3.3.0  # Corrected action with stable version
-        with:
-          format: 'ALL'                       # Output reports in all formats
-          project: 'Juice-Shop'               # Name of the project for the report
-          outdir: 'dependency-check-report'   # Directory for storing report outputs
+        run: |
+          dependency-check --project "Juice-Shop" \
+                           --out dependency-check-report \
+                           --scan $(pwd) \
+                           --format "ALL"
 
       - name: Upload Dependency-Check Report
         if: always()
